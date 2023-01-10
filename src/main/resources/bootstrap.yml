@@ -1,0 +1,48 @@
+server:
+  port: 8089
+  undertow:
+    buffer-size: 1024
+    direct-buffers: true
+  forward-headers-strategy: native
+nacos:
+  username: nacos
+  password: nacos
+  server-addr: 192.168.14.232:8848 #开发环境
+  namespace: 6733da3c-4c7e-41d3-8c76-1a416f25954d
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  application:
+    name: gateway-server
+  cloud:
+    nacos:
+      config:
+        file-extension: yml
+        prefix: ${spring.application.name}
+        server-addr: ${nacos.server-addr}
+        namespace: ${nacos.namespace}
+        group: DEFAULT_GROUP
+        username: ${nacos.username}
+        password: ${nacos.password}
+        shared-configs[0]:
+          data-id: redis.yml
+          group: DEV_GROUP
+          refresh: true
+        shared-configs[1]:
+          data-id: log-dev.yml
+          group: DEFAULT_GROUP
+          refresh: true
+        shared-configs[2]:
+          data-id: oauth-security.yml
+          group: DEV_GROUP
+          refresh: true
+        shared-configs[3]:
+          data-id: redisson.yml
+          group: DEV_GROUP
+          refresh: true
+      discovery:
+        username: ${nacos.username}
+        password: ${nacos.password}
+        server-addr: ${nacos.server-addr}
+        namespace: ${nacos.namespace}
+        group: DEV_GROUP

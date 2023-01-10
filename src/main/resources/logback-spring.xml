@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration scan="true">
+    <springProperty scope="context" name="app.name" source="spring.application.name"/>
+    <springProperty scope="context" name="log.path" source="logging.path" defaultValue="logs"/>
+    <springProperty scope="context" name="log.level" source="logging.level" defaultValue="info"/>
+    <springProperty name="ServerIP" scope="context" source="spring.cloud.client.ip-address" defaultValue="0.0.0.0"/>
+    <springProperty name="ServerPort" scope="context" source="server.port" defaultValue="0000"/>
+    <springProperty name="topicName" scope="context" source="logging.topic.name" defaultValue="ymt20"/>
+    <springProperty name="graylogHost" scope="context" source="logging.graylog.host" defaultValue="0.0.0.0"/>
+    <springProperty name="graylogPort" scope="context" source="logging.graylog.port" defaultValue="12201"/>
+
+    <property name="LOG_FILE" value="${log.path}/${app.name}.log" />
+    <!-- 彩色日志 -->
+    <!-- 彩色日志依赖的渲染类 -->
+    <conversionRule conversionWord="clr" converterClass="org.springframework.boot.logging.logback.ColorConverter" />
+    <conversionRule conversionWord="wex" converterClass="org.springframework.boot.logging.logback.WhitespaceThrowableProxyConverter" />
+    <conversionRule conversionWord="wEx" converterClass="org.springframework.boot.logging.logback.ExtendedWhitespaceThrowableProxyConverter" />
+    <!-- 彩色日志格式 -->
+    <property name="CONSOLE_LOG_PATTERN"
+              value="[%X{X-B3-TraceId},%X{X-B3-SpanId},%X{X-B3-ParentSpanId}][${app.name}:${ServerIP}:${ServerPort}] %clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%level){blue} %clr(${PID}){magenta} %clr([%thread]){orange} %clr(%logger){cyan} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}" />
+
+    <!--输出到控制台-->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <withJansi>true</withJansi>
+        <encoder>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!--输出到文件-->
+    <!--<appender name="OUT" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_FILE}</file>
+        <encoder>
+            <pattern>%date{yyyy-MM-dd HH:mm:ss.SSS} | %thread | %-5level | %class{200} | %file\(%line\) | %msg%n</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${log.path}/${app.name}-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>100MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+    </appender>-->
+
+    <appender name="GELF" class="de.siegmar.logbackgelf.GelfUdpAppender">
+        <graylogHost>${graylogHost}</graylogHost>
+        <graylogPort>${graylogPort}</graylogPort>
+        <maxChunkSize>508</maxChunkSize>
+        <useCompression>true</useCompression>
+        <encoder class="de.siegmar.logbackgelf.GelfEncoder">
+            <includeRawMessage>false</includeRawMessage>
+            <includeMarker>true</includeMarker>
+            <includeMdcData>true</includeMdcData>
+            <includeCallerData>false</includeCallerData>
+            <includeRootCauseData>false</includeRootCauseData>
+            <includeLevelName>true</includeLevelName>
+            <!--<shortPatternLayout class="ch.qos.logback.classic.PatternLayout">
+                <pattern>%m%nopex</pattern>
+            </shortPatternLayout>-->
+            <fullPatternLayout class="ch.qos.logback.classic.PatternLayout">
+                <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+            </fullPatternLayout>
+            <numbersAsString>false</numbersAsString>
+            <staticField>app_name:${app.name}</staticField>
+            <staticField>server_ip:${ServerIP}</staticField>
+            <staticField>server_port:${ServerPort}</staticField>
+            <staticField>topic:${topicName}</staticField>
+            <!-- <staticField>java_version:${java.version}</staticField>
+             <staticField>address_ip:${address.ip}</staticField>-->
+        </encoder>
+    </appender>
+
+    <root level="${log.level}">
+        <appender-ref ref="STDOUT" />
+        <!--<appender-ref ref="OUT" />-->
+        <appender-ref ref="GELF" />
+    </root>
+
+</configuration>
