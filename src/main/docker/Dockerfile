@@ -1,6 +1,7 @@
 FROM williamyeh/java8:latest
 VOLUME /tmp
-ADD *.jar app.jar
+ARG JAR_FILE
+COPY ${JAR_FILE} app.jar
 #RUN bash -c 'touch /app.jar'
 ENV JAVA_OPTS="\
 -Dfile.encoding=UTF8 \
